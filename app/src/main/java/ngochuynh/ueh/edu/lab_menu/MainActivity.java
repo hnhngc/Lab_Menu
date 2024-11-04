@@ -6,6 +6,8 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Random;
+import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,40 +35,43 @@ public class MainActivity extends AppCompatActivity {
     private GridLayout gridLayout;
     private List<Integer> numbers;
     private int currentSmallestNumber;
-    private static final int TOTAL_BUTTONS = 16;
+    private static final int TOTAL_BUTTONS = 4;
     private static final int MAX_NUMBER = 100;
     private Button btnStart;
     private TextView tvTimer;
     private Handler timerHandler;
     private long startTime = 0L;
     private boolean isGameRunning = false;
+    private int wrongAttempts = 0;
+    private static final int MAX_WRONG_ATTEMPTS = 3;
+    private long pausedTime = 0L;
 
-    // Định nghĩa mảng màu nền và màu chữ riêng biệt
     private static final int[] BACKGROUND_COLORS = {
-            Color.rgb(255, 182, 193), // Light pink
-            Color.rgb(173, 216, 230), // Light blue
-            Color.rgb(144, 238, 144), // Light green
-            Color.rgb(255, 218, 185), // Peach
-            Color.rgb(221, 160, 221), // Plum
-            Color.rgb(176, 224, 230), // Powder blue
-            Color.rgb(255, 255, 224), // Light yellow
-            Color.rgb(230, 230, 250)  // Lavender
+            Color.rgb(255, 182, 193),
+            Color.rgb(173, 216, 230),
+            Color.rgb(144, 238, 144),
+            Color.rgb(255, 218, 185),
+            Color.rgb(221, 160, 221),
+            Color.rgb(176, 224, 230),
+            Color.rgb(255, 255, 224),
+            Color.rgb(230, 230, 250)
     };
 
     private static final int[] TEXT_COLORS = {
-            Color.rgb(139, 0, 0),     // Dark red
-            Color.rgb(0, 0, 139),     // Dark blue
-            Color.rgb(0, 100, 0),     // Dark green
-            Color.rgb(139, 69, 19),   // Saddle brown
-            Color.rgb(75, 0, 130),    // Indigo
-            Color.rgb(25, 25, 112),   // Midnight blue
-            Color.rgb(128, 0, 0),     // Maroon
-            Color.rgb(85, 107, 47)    // Dark olive green
+            Color.rgb(139, 0, 0),
+            Color.rgb(0, 0, 139),
+            Color.rgb(0, 100, 0),
+            Color.rgb(139, 69, 19),
+            Color.rgb(75, 0, 130),
+            Color.rgb(25, 25, 112),
+            Color.rgb(128, 0, 0),
+            Color.rgb(85, 107, 47)
     };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        loadLocale();
         setContentView(R.layout.activity_main);
 
         gridLayout = findViewById(R.id.gridLayout);
@@ -75,12 +81,10 @@ public class MainActivity extends AppCompatActivity {
         btnStart = findViewById(R.id.btnStart);
         tvTimer = findViewById(R.id.tvTimer);
 
-
-        // Disable tất cả buttons lúc khởi động
         disableAllButtons();
-
         btnStart.setOnClickListener(v -> startGame());
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.my_option_menu, menu);
@@ -92,24 +96,36 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.mni_settings) {
-            // Chuyển sang SettingActivity
             Intent intent = new Intent(MainActivity.this, SettingActivity.class);
             startActivity(intent);
             return true;
-        } else if (id == R.id.mni_favorite) {
-            // Xử lý khi click vào Favorite
-            Toast.makeText(this, "Favorite clicked", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            Intent intent = new Intent(MainActivity.this, AboutActivity.class);
+            startActivity(intent);
             return true;
         }
+    }
 
-        return super.onOptionsItemSelected(item);
+    private void loadLocale() {
+        SharedPreferences prefs = getSharedPreferences("Settings", MODE_PRIVATE);
+        boolean isEnglish = prefs.getBoolean("isEnglish", true);
+        String languageCode = isEnglish ? "en" : "vi";
+
+        Locale locale = new Locale(languageCode);
+        Locale.setDefault(locale);
+
+        Resources resources = getResources();
+        Configuration config = resources.getConfiguration();
+        config.setLocale(locale);
+        resources.updateConfiguration(config, resources.getDisplayMetrics());
     }
 
     private void initializeGame() {
         numbers = generateRandomNumbers();
         currentSmallestNumber = findSmallestNumber();
+        wrongAttempts = 0;
 
-        // Reset tất cả buttons về trạng thái ban đầu
         for (int i = 0; i < TOTAL_BUTTONS; i++) {
             int buttonId = getResources().getIdentifier("btn" + i, "id", getPackageName());
             Button button = findViewById(buttonId);
@@ -118,33 +134,25 @@ public class MainActivity extends AppCompatActivity {
             button.setText(String.valueOf(numbers.get(i)));
         }
 
-        // Cập nhật màu cho các button
         updateButtonColors();
     }
+
     @Override
     protected void onResume() {
         super.onResume();
-        if (isGameRunning) {
-            startTime = System.currentTimeMillis() - (getMinutesFromTimer() * 60 + getSecondsFromTimer()) * 1000;
+        loadLocale();
+        if (isGameRunning && pausedTime > 0) {
+            startTime = pausedTime;
             startTimer();
         }
         updateButtonColors();
-    }
-
-    private int getMinutesFromTimer() {
-        String time = tvTimer.getText().toString();
-        return Integer.parseInt(time.split(":")[0]);
-    }
-
-    private int getSecondsFromTimer() {
-        String time = tvTimer.getText().toString();
-        return Integer.parseInt(time.split(":")[1]);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         if (isGameRunning) {
+            pausedTime = startTime;
             stopTimer();
         }
     }
@@ -158,10 +166,8 @@ public class MainActivity extends AppCompatActivity {
             int buttonId = getResources().getIdentifier("btn" + i, "id", getPackageName());
             Button button = findViewById(buttonId);
 
-            // Chỉ cập nhật màu cho các button còn active
             if (button.isEnabled()) {
                 if (isColorful) {
-                    // Sử dụng màu random
                     int backgroundColorIndex = random.nextInt(BACKGROUND_COLORS.length);
                     int backgroundColor = BACKGROUND_COLORS[backgroundColorIndex];
                     int textColorIndex;
@@ -173,7 +179,6 @@ public class MainActivity extends AppCompatActivity {
                     button.setBackgroundColor(backgroundColor);
                     button.setTextColor(textColor);
                 } else {
-                    // Sử dụng theme đen
                     button.setBackgroundColor(Color.BLACK);
                     button.setTextColor(Color.WHITE);
                 }
@@ -199,48 +204,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void assignNumbersToButtons() {
-        Random random = new Random();
-        SharedPreferences sharedPreferences = getSharedPreferences("Settings", MODE_PRIVATE);
-        boolean isColorful = sharedPreferences.getBoolean("isColorful", true);
-
         for (int i = 0; i < TOTAL_BUTTONS; i++) {
             int buttonId = getResources().getIdentifier("btn" + i, "id", getPackageName());
             Button button = findViewById(buttonId);
-
-            if (isColorful) {
-                // Sử dụng màu random như cũ
-                int backgroundColorIndex = random.nextInt(BACKGROUND_COLORS.length);
-                int backgroundColor = BACKGROUND_COLORS[backgroundColorIndex];
-                int textColorIndex;
-                do {
-                    textColorIndex = random.nextInt(TEXT_COLORS.length);
-                } while (textColorIndex == backgroundColorIndex);
-                int textColor = TEXT_COLORS[textColorIndex];
-
-                button.setBackgroundColor(backgroundColor);
-                button.setTextColor(textColor);
-            } else {
-                // Sử dụng theme đen
-                button.setBackgroundColor(Color.BLACK);
-                button.setTextColor(Color.WHITE);
-            }
-
             button.setText(String.valueOf(numbers.get(i)));
             button.setEnabled(true);
             button.setElevation(8f);
             button.setOnClickListener(v -> handleButtonClick(button));
         }
+        updateButtonColors();
     }
 
     private void handleButtonClick(Button button) {
         int selectedNumber = Integer.parseInt(button.getText().toString());
-        if (currentSmallestNumber > 0 && selectedNumber == currentSmallestNumber) { // Kiểm tra số hợp lệ
+        if (currentSmallestNumber > 0 && selectedNumber == currentSmallestNumber) {
             button.setBackgroundColor(Color.GREEN);
             button.setTextColor(Color.WHITE);
             button.setEnabled(false);
             button.setElevation(0f);
+            wrongAttempts = 0;
 
-            // Cập nhật số nhỏ nhất mới
             numbers.remove(Integer.valueOf(currentSmallestNumber));
             if (!numbers.isEmpty()) {
                 currentSmallestNumber = findSmallestNumber();
@@ -248,10 +231,20 @@ public class MainActivity extends AppCompatActivity {
                 showWinDialog();
             }
         } else {
-            // Sai số
+            wrongAttempts++;
             showErrorAnimation(button);
-            Toast.makeText(this, "Hãy tìm số nhỏ nhất!!!", Toast.LENGTH_SHORT).show();
+            String message = isEnglish() ? "Find the smallest number!" : "Hãy tìm số nhỏ nhất!";
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+
+            if (wrongAttempts >= MAX_WRONG_ATTEMPTS) {
+                showLoseDialog();
+            }
         }
+    }
+
+    private boolean isEnglish() {
+        return getSharedPreferences("Settings", MODE_PRIVATE)
+                .getBoolean("isEnglish", true);
     }
 
     private void showErrorAnimation(Button button) {
@@ -284,26 +277,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Thêm phương thức xử lý Start game
     private void startGame() {
         if (!isGameRunning) {
             isGameRunning = true;
-            btnStart.setText("Reset");
+            btnStart.setText(isEnglish() ? "Reset" : "Làm Mới");
             initializeGame();
             enableAllButtons();
-            assignNumbersToButtons(); // Gọi phương thức để gán số cho các nút
+            assignNumbersToButtons();
             startTimer();
         } else {
-            // Reset game
             isGameRunning = false;
-            btnStart.setText("Start");
+            btnStart.setText(isEnglish() ? "Start" : "Bắt Đầu");
             stopTimer();
             tvTimer.setText("00:00");
             disableAllButtons();
+            pausedTime = 0L;
         }
     }
 
-    // Thêm các phương thức xử lý timer
     private void startTimer() {
         startTime = System.currentTimeMillis();
         timerHandler.postDelayed(updateTimerThread, 0);
@@ -323,20 +314,45 @@ public class MainActivity extends AppCompatActivity {
             timerHandler.postDelayed(this, 500);
         }
     };
+
     private void showWinDialog() {
-        stopTimer(); // Dừng timer khi thắng
+        stopTimer();
         isGameRunning = false;
-        btnStart.setText("Start");
+        btnStart.setText(isEnglish() ? "Start" : "Bắt Đầu");
+
+        String title = isEnglish() ? "Congratulations!" : "Chúc mừng!";
+        String message = isEnglish()
+                ? "You completed the game in " + tvTimer.getText() + ". Would you like to play again?"
+                : "Bạn đã hoàn thành trò chơi trong " + tvTimer.getText() + ". Bạn có muốn chơi lại không?";
+        String playAgain = isEnglish() ? "Play Again" : "Chơi Lại";
+        String exit = isEnglish() ? "Exit" : "Thoát";
 
         new AlertDialog.Builder(this)
-                .setTitle("Chúc mừng!")
-                .setMessage("Bạn đã hoàn thành trò chơi trong " + tvTimer.getText() + ". Bạn muốn chơi lại không?")
-                .setPositiveButton("Chơi lại", (dialog, which) -> {
-                    startGame();
-                })
-                .setNegativeButton("Thoát", (dialog, which) -> {
-                    finish();
-                })
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton(playAgain, (dialog, which) -> startGame())
+                .setNegativeButton(exit, (dialog, which) -> finish())
+                .setCancelable(false)
+                .show();
+    }
+
+    private void showLoseDialog() {
+        stopTimer();
+        isGameRunning = false;
+        btnStart.setText(isEnglish() ? "Start" : "Bắt Đầu");
+
+        String title = isEnglish() ? "Game Over" : "Kết Thúc";
+        String message = isEnglish()
+                ? "You made 3 wrong attempts. Game Over!"
+                : "Bạn đã chọn sai 3 lần. Trò chơi kết thúc!";
+        String playAgain = isEnglish() ? "Play Again" : "Chơi Lại";
+        String exit = isEnglish() ? "Exit" : "Thoát";
+
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton(playAgain, (dialog, which) -> startGame())
+                .setNegativeButton(exit, (dialog, which) -> finish())
                 .setCancelable(false)
                 .show();
     }

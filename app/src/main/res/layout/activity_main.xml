@@ -59,13 +59,13 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="84dp"
-        app:columnCount="4"
+        app:columnCount="2"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:orientation="horizontal"
         android:layout_gravity="center"
-        app:rowCount="4">
+        app:rowCount="2">
 
         <Button
             android:id="@+id/btn0"
@@ -103,113 +103,7 @@
             app:layout_columnWeight="1"
             app:layout_rowWeight="1" />
 
-        <Button
-            android:id="@+id/btn4"
-            style="@style/GameButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_margin="4dp"
-            app:layout_columnWeight="1"
-            app:layout_rowWeight="1" />
 
-        <Button
-            android:id="@+id/btn5"
-            style="@style/GameButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_margin="4dp"
-            app:layout_columnWeight="1"
-            app:layout_rowWeight="1" />
-
-        <Button
-            android:id="@+id/btn6"
-            style="@style/GameButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_margin="4dp"
-            app:layout_columnWeight="1"
-            app:layout_rowWeight="1" />
-
-        <Button
-            android:id="@+id/btn7"
-            style="@style/GameButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_margin="4dp"
-            app:layout_columnWeight="1"
-            app:layout_rowWeight="1" />
-
-        <Button
-            android:id="@+id/btn8"
-            style="@style/GameButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_margin="4dp"
-            app:layout_columnWeight="1"
-            app:layout_rowWeight="1" />
-
-        <Button
-            android:id="@+id/btn9"
-            style="@style/GameButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_margin="4dp"
-            app:layout_columnWeight="1"
-            app:layout_rowWeight="1" />
-
-        <Button
-            android:id="@+id/btn10"
-            style="@style/GameButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_margin="4dp"
-            app:layout_columnWeight="1"
-            app:layout_rowWeight="1" />
-
-        <Button
-            android:id="@+id/btn11"
-            style="@style/GameButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_margin="4dp"
-            app:layout_columnWeight="1"
-            app:layout_rowWeight="1" />
-
-        <Button
-            android:id="@+id/btn12"
-            style="@style/GameButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_margin="4dp"
-            app:layout_columnWeight="1"
-            app:layout_rowWeight="1" />
-
-        <Button
-            android:id="@+id/btn13"
-            style="@style/GameButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_margin="4dp"
-            app:layout_columnWeight="1"
-            app:layout_rowWeight="1" />
-
-        <Button
-            android:id="@+id/btn14"
-            style="@style/GameButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_margin="4dp"
-            app:layout_columnWeight="1"
-            app:layout_rowWeight="1" />
-
-        <Button
-            android:id="@+id/btn15"
-            style="@style/GameButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_margin="4dp"
-            app:layout_columnWeight="1"
-            app:layout_rowWeight="1" />
 
     </androidx.gridlayout.widget.GridLayout>
 
